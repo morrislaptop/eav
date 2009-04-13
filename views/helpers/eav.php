@@ -133,7 +133,7 @@ class EavHelper extends AppHelper
 	function embedWysiwyg()
 	{
 		$this->wysiwygInserted = true;
-		$this->Javascript->link('/bakedsimple/js/tiny_mce/tiny_mce', false);
+		$this->Javascript->link('/baked_simple/js/tiny_mce/tiny_mce', false);
 		$view = ClassRegistry::getObject('view');
 		echo $view->element('admin' . DS . 'tiny_mce');
 	}

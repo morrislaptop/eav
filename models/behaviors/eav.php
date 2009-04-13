@@ -41,7 +41,7 @@ class EavBehavior extends ModelBehavior
 	}
 	
 	function alias($model) {
-		if ( $this->settings[$model->alias]['cache']['storedAlias'] === null ) {
+		if ( true || $this->settings[$model->alias]['cache']['storedAlias'] === null ) {
 			$this->settings[$model->alias]['cache']['storedAlias'] = $this->_alias($model);
 		}
 		return $this->settings[$model->alias]['cache']['storedAlias'];
@@ -99,10 +99,11 @@ class EavBehavior extends ModelBehavior
 	
 	function afterFind($model, $results)
 	{
-		if ( count($results) > 1 ) {
+		if ( count($results) > 1 || !isset($results[0][$model->alias][$model->primaryKey]) ) {
 			return $results;
 		}
 		
+		$model->id = $results[0][$model->alias][$model->primaryKey];
 		$eavModel = $this->alias($model);
 		
 		// bind the badboys up
@@ -141,7 +142,7 @@ class EavBehavior extends ModelBehavior
 			trigger_error($model->alias . ' does not have a ' . $field . ' field');
 			return false;
 		}
-		else if ( $model->id ) {
+		else if ( $model->id && is_numeric($model->id) ) {
 			// quietly get the needed field, without waking up the nasty afterFind callbacks.
 			if ( 0 ) {
 				$conditions = array('id' => $model->id);
@@ -155,10 +156,11 @@ class EavBehavior extends ModelBehavior
 				$primaryKey = $model->primaryKey;
 				$sql = "SELECT {$field} FROM {$model->table} as {$model->alias} WHERE {$primaryKey} = {$model->$primaryKey}";
 				$result = $db->query($sql);
-				return $result[0][$model->alias][$field];
+				if ( $result ) {
+					return $result[0][$model->alias][$field];
+				}
 			}
 		}
-		trigger_error('Couldnt get data for ' . $model->alias . '->' . $field);
 	}
 	
 	function afterSave($model, $created) 
