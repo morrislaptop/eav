@@ -2,7 +2,7 @@
 class EavHelper extends AppHelper
 {
 	var $helpers = array('Uniform', 'Html', 'Javascript');
-	
+
 	var $typeMap = array(
 		'wysiwyg' => 'text',
 		'image' => 'varchar',
@@ -10,17 +10,18 @@ class EavHelper extends AppHelper
 		'varchar' => 'varchar',
 		'text' => 'text',
 		'datetime' => 'datetime',
+		'textarea' => 'text',
 	);
-	
+
 	var $wysiwygInserted = false;
-	
+
 	/**
 	* Stores the original model that we are using.
-	* 
+	*
 	* @var mixed
 	*/
 	var $entity;
-	
+
 	function inputs($fields = null, $blacklist = null)
 	{
 		$fieldset = $legend = true;
@@ -95,41 +96,41 @@ class EavHelper extends AppHelper
 			return $out;
 		}
 	}
-	
+
 	function input($attribute)
 	{
 		// get model and load it so the form will work automagically
 		$model = 'EavAttribute' . ucwords($this->typeMap[$attribute['type']]);
 		ClassRegistry::init($model, 'Model');
-		
+
 		// Store the original model once, as the next time it will be replaced with EavAtttributeXxxxx
 		if ( !$this->entity ) {
 			$this->entity = $this->model();
 		}
-		
+
 		// switch the label and the data so it's programmer friendly
 		$options = array(
 			'label' => Inflector::humanize($attribute['name']),
 			#'name' => 'data[' . $model . '][' . Inflector::underscore($attribute['name']) . ']'
 		);
-		
+
 		// put a wysiwyg in...
 		if ( 'wysiwyg' == $attribute['type'] ) {
 			$options['class'] = 'tinymce';
-			
+
 			if ( !$this->wysiwygInserted ) {
 				$this->embedWysiwyg();
 			}
 		}
-		
+
 		// put value in...
 		if ( isset($this->data[$this->entity][Inflector::underscore($attribute['name'])]) ) {
 			$options['value'] = $this->data[$this->entity][Inflector::underscore($attribute['name'])];
 		}
-		
+
 		return $this->Uniform->input($attribute['name'], $options);
 	}
-	
+
 	function embedWysiwyg()
 	{
 		$this->wysiwygInserted = true;
