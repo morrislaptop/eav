@@ -1,7 +1,7 @@
 <?php
 class EavHelper extends AppHelper
 {
-	var $helpers = array('Uniform', 'Html', 'Javascript');
+	var $helpers = array('Uniform.Uniform', 'Html', 'Javascript');
 
 	var $typeMap = array(
 		'wysiwyg' => 'text',
@@ -11,9 +11,10 @@ class EavHelper extends AppHelper
 		'text' => 'text',
 		'datetime' => 'datetime',
 		'textarea' => 'text',
+		'url' => 'text',
+		'boolean' => 'boolean',
+		'flash' => 'varchar'
 	);
-
-	var $wysiwygInserted = false;
 
 	/**
 	* Stores the original model that we are using.
@@ -114,29 +115,12 @@ class EavHelper extends AppHelper
 			#'name' => 'data[' . $model . '][' . Inflector::underscore($attribute['name']) . ']'
 		);
 
-		// put a wysiwyg in...
-		if ( 'wysiwyg' == $attribute['type'] ) {
-			$options['class'] = 'tinymce';
-
-			if ( !$this->wysiwygInserted ) {
-				$this->embedWysiwyg();
-			}
-		}
-
 		// put value in...
 		if ( isset($this->data[$this->entity][Inflector::underscore($attribute['name'])]) ) {
 			$options['value'] = $this->data[$this->entity][Inflector::underscore($attribute['name'])];
 		}
 
 		return $this->Uniform->input($attribute['name'], $options);
-	}
-
-	function embedWysiwyg()
-	{
-		$this->wysiwygInserted = true;
-		$this->Javascript->link('/baked_simple/js/tiny_mce/tiny_mce', false);
-		$view = ClassRegistry::getObject('view');
-		echo $view->element('admin' . DS . 'tiny_mce');
 	}
 }
 ?>

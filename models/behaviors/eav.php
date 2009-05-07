@@ -5,20 +5,27 @@ class EavBehavior extends ModelBehavior
 		'EavAttributeVarchar',
 		'EavAttributeDatetime',
 		'EavAttributeText',
+		'EavAttributeBoolean'
 	);
 	var $typeToModel = array(
 		'text' => 'varchar',
 		'datetime' => 'datetime',
 		'wysiwyg' => 'text',
 		'image' => 'varchar',
-		'textarea' => 'varchar'
+		'textarea' => 'varchar',
+		'url' => 'varchar',
+		'boolean' => 'boolean',
+		'flash' => 'varchar',
 	);
 	var $typeToType = array(
 		'text' => 'string',
 		'datetime' => 'datetime',
-		'wysiwyg' => 'text',
+		'wysiwyg' => 'wysiwyg',
 		'image' => 'file',
-		'textarea' => 'text'
+		'textarea' => 'text',
+		'url' => 'string',
+		'boolean' => 'boolean',
+		'flash' => 'file',
 	);
 
 	var $settings = array();
@@ -107,6 +114,10 @@ class EavBehavior extends ModelBehavior
 
 	function mergeAttributeValues($model, $results)
 	{
+		if ( !$results ) {
+			return $results;
+		}
+
 		$model->id = $results[0][$model->alias][$model->primaryKey];
 		$eavModel = $this->alias($model);
 
@@ -187,18 +198,20 @@ class EavBehavior extends ModelBehavior
 	{
 		$eavModel = $this->alias($model);
 
-		// Delete existing data for entity
+		// Bind attribute values to the model so we can fetch all related data
 		foreach ($this->typeModels as $typeModel)
 		{
 			// bind them.
 			$this->bindAttributeValue($model, $typeModel);
 
-			// delete the existing data
-			$conditions = array(
-				$typeModel . '.model' => $eavModel,
-				$typeModel . '.foreign_key' => $model->id
-			);
-			$model->$typeModel->deleteAll($conditions);
+			// delete the existing data - disabled as it would delete file references (if they are not uploaded again)
+			if ( 0 ) {
+				$conditions = array(
+					$typeModel . '.model' => $eavModel,
+					$typeModel . '.foreign_key' => $model->id
+				);
+				$model->$typeModel->deleteAll($conditions);
+			}
 		}
 
 		// Go through attributes and save them in appropriate tables.
@@ -211,10 +224,6 @@ class EavBehavior extends ModelBehavior
 			$valueModel = 'EavAttribute' . ucwords($this->typeToModel[$attribute['type']]);
 			$model->$valueModel->create();
 			$value = $model->data[$model->alias][$field];
-
-			if ( is_array($value) ) {
-				$value = implode(', ', $value);
-			}
 
 			$valueData = array(
 				'attribute_id' => $attribute['id'],
