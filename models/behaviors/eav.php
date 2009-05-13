@@ -5,7 +5,8 @@ class EavBehavior extends ModelBehavior
 		'EavAttributeVarchar',
 		'EavAttributeDatetime',
 		'EavAttributeText',
-		'EavAttributeBoolean'
+		'EavAttributeBoolean',
+		'EavAttributeNumber',
 	);
 	var $typeToModel = array(
 		'text' => 'varchar',
@@ -16,6 +17,7 @@ class EavBehavior extends ModelBehavior
 		'url' => 'varchar',
 		'boolean' => 'boolean',
 		'flash' => 'varchar',
+		'number' => 'number',
 	);
 	var $typeToType = array(
 		'text' => 'string',
@@ -26,6 +28,7 @@ class EavBehavior extends ModelBehavior
 		'url' => 'string',
 		'boolean' => 'boolean',
 		'flash' => 'file',
+		'number' => 'string',
 	);
 
 	var $settings = array();

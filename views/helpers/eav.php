@@ -13,7 +13,8 @@ class EavHelper extends AppHelper
 		'textarea' => 'text',
 		'url' => 'text',
 		'boolean' => 'boolean',
-		'flash' => 'varchar'
+		'flash' => 'varchar',
+		'number' => 'number'
 	);
 
 	/**
