@@ -19,164 +19,95 @@ class EavBehavior extends ModelBehavior
 		'flash' => 'varchar',
 		'number' => 'number',
 	);
-	var $typeToType = array(
+	var $typeToDbType = array(
 		'text' => 'string',
 		'datetime' => 'datetime',
-		'wysiwyg' => 'wysiwyg',
-		'image' => 'file',
+		'wysiwyg' => 'text',
+		'image' => 'string',
 		'textarea' => 'text',
 		'url' => 'string',
 		'boolean' => 'boolean',
-		'flash' => 'file',
+		'flash' => 'string',
 		'number' => 'string',
 	);
 
 	var $settings = array();
 	var $runtime = array();
+	var $cache = array();
 
 	function setup(&$model, $settings = array()) {
 		if ( !isset($this->settings[$model->alias]) ) {
 			$this->settings[$model->alias] = array(
-				'alias' => false,
-				'cache' => array(
-					'storedAlias' => null,
-					'attributes' => null
-				)
+				'appendToEavModel' => false,
 			);
 		}
 		if ( !isset($this->runtime[$model->alias]) ) {
 			$this->runtime[$model->alias] = array();
 		}
-		if (!is_array($settings)) {
-			$settings = array();
-		}
 		$this->settings[$model->alias] = array_merge($this->settings[$model->alias], $settings);
-
-		// if the alias doesn't depend on a field, bind it straight away
-		if ( !$this->settings[$model->alias]['alias'] ) {
-			$this->bindAttributes($model, false);
-		}
 	}
 
-	function alias($model) {
-		if ( true || $this->settings[$model->alias]['cache']['storedAlias'] === null ) {
-			$this->settings[$model->alias]['cache']['storedAlias'] = $this->_alias($model);
-		}
-		return $this->settings[$model->alias]['cache']['storedAlias'];
-	}
-
-	function _alias($model)
+	/**
+	* Returns the model alias that is used to retrieve the attributes and attribute values.
+	*
+	* @param mixed $model
+	* @param mixed $data
+	*/
+	function eavModel($model, $data = null)
 	{
 		$settings = $this->settings[$model->alias];
-		$alias = $settings['alias'];
+		$append = $settings['appendToEavModel'];
 
-		if ( !$alias ) {
+		if ( !$append ) {
 			return $model->alias;
 		}
-		if ( method_exists($model, $alias) ) {
-			return $model->$alias();
+		if ( is_string($append) ) {
+			$append = array($append);
 		}
-		if ( is_string($alias) ) {
-			return $this->quietField($model, $alias);
-		}
-		if ( is_array($alias) ) {
-			$alias = '';
-			foreach ($alias as $alia) {
-				$alias .= $this->quietField($model, $alia);
+
+		$eavModel = $model->alias;
+		foreach ($append as $field) {
+			// get the data
+			if ( !empty($data[$model->alias][$field]) ) {
+				$value = $data[$model->alias][$field];
 			}
-			return $alias;
+			else {
+				$value = $model->field($field);
+			}
+
+			// make it friendly.
+			$value = str_replace(' ', '', ucwords(str_replace(array('/', '\\'), ' ', $value)));
+
+			// add to our eav model.
+			$eavModel .= $value;
 		}
-		trigger_error('Could not compute alias for ' . $model->alias);
-		return false;
+
+		return $eavModel;
 	}
 
-	function attributes($model)
+	/**
+	* Appends to model->_schema with the custom attributes.
+	*
+	* @param mixed $model
+	* @param mixed $eavModel
+	*/
+	function refreshSchema($model, $eavModel)
 	{
-		if ( $this->settings[$model->alias]['cache']['attributes'] === null ) {
-			$this->settings[$model->alias]['cache']['attributes'] = $this->_attributes($model);
-		}
-		return $this->settings[$model->alias]['cache']['attributes'];
-	}
-
-	function _attributes($model) {
-		$eavModel = $this->alias($model);
-		$this->bindAttributes($model);
+		$this->bindAttributes($model, $eavModel);
 		$conditions = array(
 			'model' => $eavModel,
 		);
 		$callbacks = false;
 		$attributes = $model->EavAttribute->find('all', compact('conditions', 'callbacks'));
-		$attributesKeyed = array();
 
 		foreach ($attributes as $attribute) {
-			$attributesKeyed[$attribute['EavAttribute']['name']] = $attribute['EavAttribute'];
-		}
-
-		return $attributesKeyed;
-	}
-
-	function mergeAttributeValues($model, $results)
-	{
-		if ( !$results ) {
-			return $results;
-		}
-
-		$model->id = $results[0][$model->alias][$model->primaryKey];
-		$eavModel = $this->alias($model);
-
-		// bind the badboys up
-		foreach ($this->typeModels as $typeModel) {
-			$this->bindAttributeValue($model, $typeModel);
-		}
-
-		foreach ($results as $key => $result)
-		{
-			if ( empty($result[$model->alias][$model->primaryKey]) ) {
-				continue;
-			}
-
-			foreach ($this->typeModels as $typeModel) {
-				$conditions = array(
-					$typeModel . '.model' => $eavModel,
-					$typeModel . '.foreign_key' => $result[$model->alias][$model->primaryKey]
-				);
-				$fields = array($typeModel . '.' . 'value', 'EavAttribute.name');
-				$values = $model->$typeModel->find('all', compact('conditions', 'fields'));
-				foreach ($values as $value) {
-					$results[$key][$model->alias][$value['EavAttribute']['name']] = $value[$typeModel]['value'];
-				}
-			}
-		}
-
-		return $results;
-	}
-
-	function quietField($model, $field) {
-		if ( !empty($model->data[$model->alias][$field]) ) {
-			return $model->data[$model->alias][$field];
-		}
-		if ( !$model->hasField($field) ) {
-			trigger_error($model->alias . ' does not have a ' . $field . ' field');
-			return false;
-		}
-		else if ( $model->id && is_numeric($model->id) ) {
-			// quietly get the needed field, without waking up the nasty afterFind callbacks.
-			if ( 0 ) {
-				$conditions = array('id' => $model->id);
-				$fields = $field;
-				$callbacks = false;
-				$row = $model->find('first', compact('conditions', 'fields', 'callbacks'));
-				return $row[$model->alias][$field];
-			}
-			else {
-				$db = ConnectionManager::getDataSource($model->useDbConfig);
-				$primaryKey = $model->primaryKey;
-				$sql = "SELECT {$field} FROM {$model->table} as {$model->alias} WHERE {$primaryKey} = {$model->$primaryKey}";
-				$result = $db->query($sql);
-				if ( $result ) {
-					return $result[0][$model->alias][$field];
-				}
-			}
+			$field = array(
+				'null' => true,
+				'default' => null,
+				'length' => null
+			);
+			$field['type'] = $this->typeToDbType[$attribute['EavAttribute']['type']];
+			$model->_schema[$attribute['EavAttribute']['name']] = $field;
 		}
 	}
 
@@ -197,24 +128,48 @@ class EavBehavior extends ModelBehavior
 		return $results;
 	}
 
+	function mergeAttributeValues($model, $results)
+	{
+		if ( !$results ) {
+			return $results;
+		}
+
+		foreach ($results as $key => $result)
+		{
+			// Get eav model for this result.
+			$eavModel = $this->eavModel($model, $result);
+			$this->refreshSchema($model, $eavModel);
+
+			foreach ($this->typeModels as $typeModel) {
+				// first bind
+				$this->bindAttributeValue($model, $eavModel, $typeModel);
+
+				// then FIND
+				$conditions = array(
+					$typeModel . '.model' => $eavModel,
+					$typeModel . '.foreign_key' => $result[$model->alias][$model->primaryKey]
+				);
+				$fields = array($typeModel . '.' . 'value', 'EavAttribute.name');
+				$values = $model->$typeModel->find('all', compact('conditions', 'fields'));
+				foreach ($values as $value) {
+					$results[$key][$model->alias][$value['EavAttribute']['name']] = $value[$typeModel]['value'];
+				}
+			}
+		}
+
+		return $results;
+	}
+
 	function afterSave($model, $created)
 	{
-		$eavModel = $this->alias($model);
+		$eavModel = $this->eavModel($model, $model->data);
+		$this->refreshSchema($model, $eavModel);
 
 		// Bind attribute values to the model so we can fetch all related data
 		foreach ($this->typeModels as $typeModel)
 		{
 			// bind them.
-			$this->bindAttributeValue($model, $typeModel);
-
-			// delete the existing data - disabled as it would delete file references (if they are not uploaded again)
-			if ( 0 ) {
-				$conditions = array(
-					$typeModel . '.model' => $eavModel,
-					$typeModel . '.foreign_key' => $model->id
-				);
-				$model->$typeModel->deleteAll($conditions);
-			}
+			$this->bindAttributeValue($model, $eavModel, $typeModel);
 		}
 
 		// Go through attributes and save them in appropriate tables.
@@ -238,39 +193,31 @@ class EavBehavior extends ModelBehavior
 		}
 	}
 
-	function bindAttributeValue($model, $valueModel) {
+	function bindAttributeValue($model, $eavModel, $valueModel) {
 		$eavValueModel = 'Eav.' . $valueModel;
 		$associations = array(
 			$valueModel => array(
 				'conditions' => array(
-					'model' => $this->alias($model),
+					'model' => $eavModel,
 				),
 				'className' => $eavValueModel,
 				'foreignKey' => 'foreign_key'
 			)
 		);
-
 		$model->bindModel(array('hasMany' => $associations));
 	}
 
-	function bindAttributes(&$model, $reset = true)
+	function bindAttributes(&$model, $eavModel, $reset = true)
 	{
 		$associations = array(
 			'EavAttribute' => array(
 				'conditions' => array(
-					'model' => $this->alias($model),
+					'model' => $eavModel,
 				),
 				'foreignKey' => false
 			)
 		);
 		$model->bindModel(array('hasMany' => $associations), $reset);
-	}
-
-	function getColumnType($model, $column) {
-		$attributes = $this->attributes($model);
-		if ( isset($attributes[$column]) ) {
-			return $this->typeToType[$attributes[$column]['type']];
-		}
 	}
 }
 ?>
