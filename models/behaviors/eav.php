@@ -93,13 +93,7 @@ class EavBehavior extends ModelBehavior
 	*/
 	function refreshSchema($model, $eavModel)
 	{
-		$this->bindAttributes($model, $eavModel);
-		$conditions = array(
-			'model' => $eavModel,
-		);
-		$callbacks = false;
-		$attributes = $model->EavAttribute->find('all', compact('conditions', 'callbacks'));
-
+		$attributes = $this->attributes($model, $eavModel);
 		foreach ($attributes as $attribute) {
 			$field = array(
 				'null' => true,
@@ -111,10 +105,24 @@ class EavBehavior extends ModelBehavior
 		}
 	}
 
+	function attributes($model, $eavModel) {
+		$this->bindAttributes($model, $eavModel);
+		$conditions = array(
+			'model' => $eavModel,
+		);
+		$callbacks = false;
+		$attributes = $model->EavAttribute->find('all', compact('conditions', 'callbacks'));
+		return $attributes;
+	}
+
 	function beforeFind($model, $queryData) {
 		if ( isset($queryData['eav']) ) {
 			$this->runtime[$model->alias]['eav'] = $queryData['eav'];
 		}
+		if ( is_null($queryData['fields']) ) {
+			$queryData['fields'] = $model->alias . '.*';
+		}
+		return $queryData;
 	}
 
 	function afterFind($model, $results) {
@@ -173,7 +181,7 @@ class EavBehavior extends ModelBehavior
 		}
 
 		// Go through attributes and save them in appropriate tables.
-		$attributes = $this->attributes($model);
+		$attributes = $this->attributes($model, $eavModel);
 		foreach ($attributes as $field => $attribute)
 		{
 			if ( !isset($model->data[$model->alias][$field]) ) {
