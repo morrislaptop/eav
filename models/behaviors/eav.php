@@ -182,17 +182,18 @@ class EavBehavior extends ModelBehavior
 
 		// Go through attributes and save them in appropriate tables.
 		$attributes = $this->attributes($model, $eavModel);
-		foreach ($attributes as $field => $attribute)
+		foreach ($attributes as $attribute)
 		{
+			$field = $attribute['EavAttribute']['name'];
 			if ( !isset($model->data[$model->alias][$field]) ) {
 				continue;
 			}
-			$valueModel = 'EavAttribute' . ucwords($this->typeToModel[$attribute['type']]);
+			$valueModel = 'EavAttribute' . ucwords($this->typeToModel[$attribute['EavAttribute']['type']]);
 			$model->$valueModel->create();
 			$value = $model->data[$model->alias][$field];
 
 			$valueData = array(
-				'attribute_id' => $attribute['id'],
+				'attribute_id' => $attribute['EavAttribute']['id'],
 				'model' => $eavModel,
 				'foreign_key' => $model->id,
 				'value' => $value
