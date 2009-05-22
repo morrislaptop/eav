@@ -16,6 +16,7 @@ class EavBehavior extends ModelBehavior
 		'textarea' => 'varchar',
 		'url' => 'varchar',
 		'boolean' => 'boolean',
+		'checkbox' => 'boolean',
 		'flash' => 'varchar',
 		'number' => 'number',
 	);
@@ -27,6 +28,7 @@ class EavBehavior extends ModelBehavior
 		'textarea' => 'text',
 		'url' => 'string',
 		'boolean' => 'boolean',
+		'checkbox' => 'boolean',
 		'flash' => 'string',
 		'number' => 'string',
 	);
