@@ -7,17 +7,18 @@ class EavBehavior extends ModelBehavior
 		'EavAttributeText',
 		'EavAttributeBoolean',
 		'EavAttributeNumber',
+		'EavAttributeFile',
 	);
 	var $typeToModel = array(
 		'text' => 'varchar',
 		'datetime' => 'datetime',
 		'wysiwyg' => 'text',
-		'image' => 'varchar',
+		'image' => 'file',
 		'textarea' => 'varchar',
 		'url' => 'varchar',
 		'boolean' => 'boolean',
 		'checkbox' => 'boolean',
-		'flash' => 'varchar',
+		'flash' => 'file',
 		'number' => 'number',
 	);
 	var $typeToDbType = array(
@@ -159,10 +160,16 @@ class EavBehavior extends ModelBehavior
 					$typeModel . '.model' => $eavModel,
 					$typeModel . '.foreign_key' => $result[$model->alias][$model->primaryKey]
 				);
-				$fields = array($typeModel . '.' . 'value', 'EavAttribute.name');
+				#$fields = array($typeModel . '.' . 'value', 'EavAttribute.name');
 				$values = $model->$typeModel->find('all', compact('conditions', 'fields'));
 				foreach ($values as $value) {
-					$results[$key][$model->alias][$value['EavAttribute']['name']] = $value[$typeModel]['value'];
+					// give file attributes the whole array of data,
+					if ( 'EavAttributeFile' == $typeModel ) {
+						$results[$key][$model->alias][$value['EavAttribute']['name']] =  $value[$typeModel];
+					}
+					else {
+						$results[$key][$model->alias][$value['EavAttribute']['name']] = $value[$typeModel]['value'];
+					}
 				}
 			}
 		}
