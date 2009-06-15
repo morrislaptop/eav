@@ -15,11 +15,12 @@ class EavBehavior extends ModelBehavior
 		'wysiwyg' => 'text',
 		'image' => 'file',
 		'textarea' => 'varchar',
-		'url' => 'varchar',
+		'link' => 'varchar',
 		'boolean' => 'boolean',
 		'checkbox' => 'boolean',
-		'flash' => 'file',
+		'media' => 'file',
 		'number' => 'number',
+		'document' => 'file',
 	);
 	var $typeToDbType = array(
 		'text' => 'string',
@@ -27,11 +28,12 @@ class EavBehavior extends ModelBehavior
 		'wysiwyg' => 'text',
 		'image' => 'string',
 		'textarea' => 'text',
-		'url' => 'string',
+		'link' => 'string',
 		'boolean' => 'boolean',
 		'checkbox' => 'boolean',
-		'flash' => 'string',
+		'media' => 'string',
 		'number' => 'string',
+		'document' => 'string',
 	);
 
 	var $settings = array();
