@@ -200,15 +200,24 @@ class EavBehavior extends ModelBehavior
 				continue;
 			}
 			$valueModel = 'EavAttribute' . ucwords($this->typeToModel[$attribute['EavAttribute']['type']]);
-			$model->$valueModel->create();
 			$value = $model->data[$model->alias][$field];
-
-			$valueData = array(
+			
+			// try and find an existing attribute to save.
+			$conditions = array(
 				'attribute_id' => $attribute['EavAttribute']['id'],
 				'model' => $eavModel,
 				'foreign_key' => $model->id,
-				'value' => $value
 			);
+			$contain = array();
+			if ( $current_value = $model->$valueModel->find('first', compact('conditions', 'contain') ) ) {
+				$model->$valueModel->id = $current_value[$valueModel]['id'];
+			}
+			else {
+				$model->$valueModel->create();
+			}
+			
+			// Value data will be the same as conditions plus the value.
+			$valueData = array_merge($conditions, compact('value'));
 			$model->$valueModel->save($valueData);
 		}
 	}
