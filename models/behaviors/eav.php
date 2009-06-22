@@ -76,9 +76,6 @@ class EavBehavior extends ModelBehavior
 			if ( !empty($data[$model->alias][$field]) ) {
 				$value = $data[$model->alias][$field];
 			}
-			else {
-				$value = $model->field($field);
-			}
 
 			// make it friendly.
 			$value = str_replace(' ', '', ucwords(str_replace(array('/', '\\'), ' ', $value)));
@@ -149,9 +146,14 @@ class EavBehavior extends ModelBehavior
 
 		foreach ($results as $key => $result)
 		{
+			// if the results dont contain the id then dont continue...
+			if ( empty($result[$model->alias][$model->primaryKey]) ) {
+				continue;
+			}
+			
 			// Get eav model for this result.
 			$eavModel = $this->eavModel($model, $result);
-			$this->refreshSchema($model, $eavModel);
+			#$this->refreshSchema($model, $eavModel);
 
 			foreach ($this->typeModels as $typeModel) {
 				// first bind
@@ -162,7 +164,13 @@ class EavBehavior extends ModelBehavior
 					$typeModel . '.model' => $eavModel,
 					$typeModel . '.foreign_key' => $result[$model->alias][$model->primaryKey]
 				);
-				#$fields = array($typeModel . '.' . 'value', 'EavAttribute.name');
+				
+				$fields = array($typeModel . '.' . 'value', 'EavAttribute.name');
+				if ( $typeModel == 'EavAttributeFile' ) {
+					$fields = array($typeModel . '.' . 'value', $typeModel . '.' . 'dir', 'EavAttribute.name');
+				}
+				
+				$contain = array();
 				$values = $model->$typeModel->find('all', compact('conditions', 'fields'));
 				foreach ($values as $value) {
 					// give file attributes the whole array of data,
@@ -182,7 +190,7 @@ class EavBehavior extends ModelBehavior
 	function afterSave($model, $created)
 	{
 		$eavModel = $this->eavModel($model, $model->data);
-		$this->refreshSchema($model, $eavModel);
+		#$this->refreshSchema($model, $eavModel);
 
 		// Bind attribute values to the model so we can fetch all related data
 		foreach ($this->typeModels as $typeModel)
