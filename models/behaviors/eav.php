@@ -73,11 +73,12 @@ class EavBehavior extends ModelBehavior
 		$eavModel = $model->alias;
 		foreach ($append as $field) {
 			// get the data
-			if ( !empty($data[$model->alias][$field]) ) {
-				$value = $data[$model->alias][$field];
+			if ( empty($data[$model->alias][$field]) ) {
+				continue;
 			}
 
 			// make it friendly.
+			$value = $data[$model->alias][$field];
 			$value = str_replace(' ', '', ucwords(str_replace(array('/', '\\'), ' ', $value)));
 
 			// add to our eav model.
