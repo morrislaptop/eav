@@ -14,7 +14,7 @@ class EavBehavior extends ModelBehavior
 		'datetime' => 'datetime',
 		'wysiwyg' => 'text',
 		'image' => 'file',
-		'textarea' => 'varchar',
+		'textarea' => 'text',
 		'link' => 'varchar',
 		'boolean' => 'boolean',
 		'checkbox' => 'boolean',
