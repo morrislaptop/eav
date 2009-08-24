@@ -168,7 +168,7 @@ class EavBehavior extends ModelBehavior
 				
 				$fields = array($typeModel . '.' . 'value', 'EavAttribute.name');
 				if ( $typeModel == 'EavAttributeFile' ) {
-					$fields = array($typeModel . '.' . 'value', $typeModel . '.' . 'dir', 'EavAttribute.name');
+					$fields = array('EavAttributeFile.value', 'EavAttributeFile.dirname', 'EavAttributeFile.basename', 'EavAttribute.name');
 				}
 				
 				$contain = array();
