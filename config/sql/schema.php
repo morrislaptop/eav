@@ -1,4 +1,4 @@
-<?php 
+<?php
 /* SVN FILE: $Id$ */
 /* App schema generated on: 2009-08-24 22:08:43 : 1251117403*/
 class AppSchema extends CakeSchema {
@@ -70,6 +70,9 @@ class AppSchema extends CakeSchema {
 		'foreign_key' => array('type' => 'integer', 'null' => true, 'default' => NULL),
 		'model' => array('type' => 'string', 'null' => true, 'default' => NULL, 'length' => 50),
 		'value' => array('type' => 'string', 'null' => true, 'default' => NULL),
+		'dirname' => array('type' => 'string', 'null' => true, 'default' => NULL),
+		'basename' => array('type' => 'string', 'null' => true, 'default' => NULL),
+		'checksum' => array('type' => 'string', 'null' => true, 'default' => NULL, 'length' => 32),
 		'created' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
 		'modified' => array('type' => 'datetime', 'null' => true, 'default' => NULL),
 		'indexes' => array('PRIMARY' => array('column' => 'id', 'unique' => 1))
