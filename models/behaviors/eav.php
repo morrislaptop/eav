@@ -151,7 +151,7 @@ class EavBehavior extends ModelBehavior
 			if ( empty($result[$model->alias][$model->primaryKey]) ) {
 				continue;
 			}
-			
+
 			// Get eav model for this result.
 			$eavModel = $this->eavModel($model, $result);
 			#$this->refreshSchema($model, $eavModel);
@@ -165,12 +165,12 @@ class EavBehavior extends ModelBehavior
 					$typeModel . '.model' => $eavModel,
 					$typeModel . '.foreign_key' => $result[$model->alias][$model->primaryKey]
 				);
-				
+
 				$fields = array($typeModel . '.' . 'value', 'EavAttribute.name');
 				if ( $typeModel == 'EavAttributeFile' ) {
 					$fields = array('EavAttributeFile.value', 'EavAttributeFile.dirname', 'EavAttributeFile.basename', 'EavAttribute.name');
 				}
-				
+
 				$contain = array();
 				$values = $model->$typeModel->find('all', compact('conditions', 'fields'));
 				foreach ($values as $value) {
@@ -210,12 +210,12 @@ class EavBehavior extends ModelBehavior
 			}
 			$valueModel = 'EavAttribute' . ucwords($this->typeToModel[$attribute['EavAttribute']['type']]);
 			$value = $model->data[$model->alias][$field];
-			
+
 			// try and find an existing attribute to save.
 			$conditions = array(
-				'attribute_id' => $attribute['EavAttribute']['id'],
-				'model' => $eavModel,
-				'foreign_key' => $model->id,
+				$valueModel . '.attribute_id' => $attribute['EavAttribute']['id'],
+				$valueModel . '.model' => $eavModel,
+				$valueModel . '.foreign_key' => $model->id,
 			);
 			$contain = array();
 			if ( $current_value = $model->$valueModel->find('first', compact('conditions', 'contain') ) ) {
@@ -224,9 +224,14 @@ class EavBehavior extends ModelBehavior
 			else {
 				$model->$valueModel->create();
 			}
-			
+
 			// Value data will be the same as conditions plus the value.
-			$valueData = array_merge($conditions, compact('value'));
+			$valueData = array(
+				'attribute_id' => $attribute['EavAttribute']['id'],
+				'model' => $eavModel,
+				'foreign_key' => $model->id,
+				'value' => $value
+			);
 			$model->$valueModel->save($valueData);
 		}
 	}
